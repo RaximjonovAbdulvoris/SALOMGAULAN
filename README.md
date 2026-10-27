@@ -62,6 +62,11 @@ OCR natijasini operator hujjatlar bilan solishtirishi kerak. ZIP faylni yuklash,
 Chala rasm, Boshqa park, Jarayonda va arxiv funksiyalari mavjud.
 
 `.env.example` dagi guruh IDlari SALOM uchun; tokenni faqat serverdagi
-`.env` faylga kiriting. `python -m bot.configure check --scope all` orqali
+`.env` faylga kiriting. `python -m bot.configure check` orqali
 guruh huquqlarini tekshiring. Botni ishga tushirishdan oldin shu token bilan
 ishlayotgan boshqa jarayonni to'xtating.
+
+VPSga o‘rnatishda `bash scripts/deploy_vps.sh` ishlating. Script tokenni
+ekranda ko‘rsatmasdan so‘raydi, guruh huquqlari va OCRni tekshiradi, shundan
+keyin `salomgaulan.service` ni yoqadi. U `/root/SALOMGAULAN` papkasida
+ishlaydi. Kod yangilanganda scriptni qayta ishlatish mumkin.

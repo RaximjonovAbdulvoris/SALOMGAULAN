@@ -36,7 +36,7 @@ async def telegram_check():
                     raise ValueError('Guruh ID kerak')
                 if member.status not in ('administrator', 'creator'):
                     raise ValueError('Botni administrator qiling')
-                if key != 'BRAND_GROUP' and member.status != 'creator' and not member.can_delete_messages:
+                if key not in ('BRAND_GROUP', 'SPECTRE_GROUP') and member.status != 'creator' and not member.can_delete_messages:
                     raise ValueError('Xabarlarni o‘chirish huquqi kerak')
                 print(key + ': OK')
             except Exception as error:
