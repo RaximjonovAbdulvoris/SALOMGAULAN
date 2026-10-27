@@ -43,6 +43,9 @@ GitHub orqali token va eski bot holati tarqatilmaydi.
 ## Tekshirish
 
 ```bash
+set -a
+. ./.env
+set +a
 python -m unittest discover -s tests -v
 ```
 
