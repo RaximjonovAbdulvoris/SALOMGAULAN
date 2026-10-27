@@ -239,6 +239,33 @@ class NeuralOCRTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(wait.call_args.kwargs['timeout'], 40)
 
 class LicenceIdentityTests(unittest.TestCase):
+    def test_missing_tiny_number_labels_uses_unique_birth_row_and_name_block(self):
+        from bot.neural_ocr_worker import licence_identity, birth_row_before_4a
+        words = [row('O\'RINOV', x=348, y=628, width=110, height=27, confidence=93),
+                 row('KAMOL', x=348, y=655, width=90, height=30),
+                 row('MAXMUDOVICH', x=349, y=683, width=200, height=29),
+                 row('TESTTUMAN 22.01.1983', x=345, y=711, width=260, height=30, confidence=94),
+                 row('4a10.01.2023', x=316, y=737, width=133, height=29)]
+        self.assertEqual(licence_identity(words), ("O'RINOV", 'KAMOL'))
+        values = fields_from_rows(words, 'license_front', 960, 1280)
+        self.assertEqual(values['birth_place'], 'TEST TUMAN')
+        self.assertEqual(values['birth_date'], '22.01.1983')
+        ambiguous = words + [row('OTHER 21.01.1983', x=345, y=710)]
+        self.assertIsNone(birth_row_before_4a(ambiguous))
+        self.assertIsNone(licence_identity(ambiguous))
+
+    def test_missing_apostrophe_requires_independent_crop_confirmation(self):
+        from bot.neural_ocr_worker import confirm_printed_apostrophe
+        from PIL import Image
+        from unittest.mock import Mock
+        image = Image.new('RGB', (960, 1280))
+        words = [row("O'RINOV", x=348, y=628, width=110, height=27, confidence=93)]
+        engine = Mock(return_value=([["O'RINOV", .95]], None))
+        self.assertTrue(confirm_printed_apostrophe(engine, image, words, "O'RINOV", 'ORINOV'))
+        engine.return_value = ([['ORINOV', .99]], None)
+        self.assertFalse(confirm_printed_apostrophe(engine, image, words, "O'RINOV", 'ORINOV'))
+        self.assertFalse(confirm_printed_apostrophe(engine, image, words, "O'RINOV", 'OTHER'))
+
     def test_registration_disagreement_on_hologram_is_not_exported(self):
         from bot.neural_ocr_worker import refine_registration
         from PIL import Image

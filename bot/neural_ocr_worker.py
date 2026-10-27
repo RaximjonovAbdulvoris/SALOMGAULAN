@@ -117,6 +117,12 @@ def fields_from_rows(rows, source, width, height):
                 dates = list(re.finditer(DATE, word.text))
                 if len(dates) == 1:
                     add('license_expiry', '.'.join(dates[0].groups()))
+        if not values['birth_date'] or not values['birth_place']:
+            positional = birth_row_before_4a(rows)
+            if positional:
+                _, place, date = positional
+                add('birth_place', place)
+                add('birth_date', date)
     return {key: next(iter(items)) if len(items) == 1 else None for key, items in values.items()}
 
 
@@ -132,8 +138,29 @@ def clean_place(text):
     if value:
         # Restore only a word boundary before a printed administrative suffix.
         # Do not complete, substitute, or spell-correct geographic names.
-        value = re.sub(r'(?<=[A-Z])\s*(TUMANI|SHAHRI|VILOYATI|RESPUBLIKASI)$', r' \1', value)
+        value = re.sub(r'(?<=[A-Z])\s*(TUMANI|TUMAN|SHAHRI|VILOYATI|RESPUBLIKASI)$', r' \1', value)
     return value
+
+
+def birth_row_before_4a(words):
+    """Recover field 3 only when it is the unique dated row above field 4a."""
+    anchors = [word for word in words if word.confidence >= 90 and
+               re.match(r'^4\s*[aа][.)]?\s*[0-9]{2}', word.text.strip(), re.I)]
+    if len(anchors) != 1:
+        return None
+    anchor = anchors[0]
+    candidates = []
+    for word in words:
+        if word.confidence < 90:
+            continue
+        match = re.fullmatch(r'(.+?)\s*' + PRINTED_DATE, word.text.strip())
+        if not match or not clean_place(match[1]):
+            continue
+        height = max(word.height, anchor.height)
+        if (.5 * height < anchor.top - word.top < 1.6 * height and
+                0 < word.left - anchor.left < 1.8 * height):
+            candidates.append((word, clean_place(match[1]), '.'.join(match.groups()[1:])))
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def licence_identity(words):
@@ -174,19 +201,22 @@ def licence_identity(words):
         # patronymic is only a positional check and is never returned.
         thirds = [w for w in words if w.confidence >= 90 and
                   re.fullmatch(r'3[.)]?\s*.+?\s*' + PRINTED_DATE, w.text.strip())]
-        if len(thirds) == 1:
-            third = thirds[0]
+        positional = birth_row_before_4a(words) if not thirds else None
+        if len(thirds) == 1 or positional:
+            third = thirds[0] if thirds else positional[0]
             # The third line is only a positional cue and need not be read
             # as confidently as the surname and given name themselves.
             aligned = sorted((w for w in words if w.confidence >= 85 and
                 clean_name(w.text) and
                 .35 * third.height < third.top - w.top < 2.9 * third.height and
-                abs(w.left - (third.left + third.height)) < third.height * .65),
+                abs(w.left - (third.left + third.height if thirds else third.left))
+                < third.height * .75),
                 key=lambda w: w.top)
             if len(aligned) == 3:
                 first, second, parent = aligned
                 surname, given, parent_name = (clean_name(w.text) for w in aligned)
-                if (first.confidence >= 95 and second.confidence >= 95 and
+                if (first.confidence >= (95 if thirds else 90) and
+                    second.confidence >= (95 if thirds else 90) and
                     len(surname.split()) == len(given.split()) == 1 and
                     (len(parent_name.split()) >= 2 or
                      len(parent_name) >= max(len(surname), len(given)) + 2) and
@@ -256,6 +286,29 @@ def licence_identity(words):
 def licence_name(words):
     identity = licence_identity(words)
     return ' '.join(identity) if identity else None
+
+
+def confirm_printed_apostrophe(engine, image, words, preferred, alternate):
+    """Resolve only a missing apostrophe when a tight OCR crop confirms it."""
+    import numpy as np
+    if not preferred or not alternate or preferred == alternate:
+        return False
+    if preferred.replace("'", '') != alternate.replace("'", '') or "'" not in preferred:
+        return False
+    matches = [word for word in words if word.text.strip() == preferred and word.confidence >= 90]
+    if len(matches) != 1:
+        return False
+    word = matches[0]
+    margin = 2
+    crop = image.crop((max(0, int(word.left) - margin), max(0, int(word.top) - margin),
+                       min(image.width, int(word.left + word.width) + margin),
+                       min(image.height, int(word.top + word.height) + margin)))
+    if min(crop.size) < 8:
+        return False
+    scaled = crop.resize((crop.width * 2, crop.height * 2), Image.Resampling.BICUBIC)
+    rows, _ = engine(np.array(scaled)[:, :, ::-1].copy(), use_det=False, use_cls=False)
+    return bool(rows and len(rows) == 1 and rows[0][1] >= .90 and
+                rows[0][0].strip() == preferred)
 
 
 def unanimous(readings):
@@ -503,6 +556,14 @@ def read_document(engine, raw, source, emit=None, return_kind=False):
             other_identity = licence_identity(other)
             alternate['surname'], alternate['given_name'] = other_identity or (None, None)
             alternate['full_name'] = ' '.join(other_identity) if other_identity else None
+            if identity and other_identity and normal_words:
+                checked = []
+                for original, variant in zip(identity, other_identity):
+                    checked.append(original == variant or confirm_printed_apostrophe(
+                        engine, image, normal_words, original, variant))
+                if all(checked):
+                    alternate['surname'], alternate['given_name'] = identity
+                    alternate['full_name'] = ' '.join(identity)
         required = (*required, 'surname', 'given_name') if source == 'license_front' else required
         for key in required:
             if alternate.get(key):
