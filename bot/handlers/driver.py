@@ -30,6 +30,7 @@ from bot.vehicle_numbers import normalize_plate
 from bot.presentation import contact_button, menu_button, premium_markup, send_brand_sticker, send_warning_voice, with_keyboard_fallback
 from bot.counter import next_index
 from bot.handlers.operator import build_operator_keyboard, register_application
+from bot.contact_info import PHONE_DISPLAY, SUPPORT_HANDLE
 from bot.handlers.start import MENU_DRIVER, main_keyboard, require_region, cancel
 from bot.regions import (
     clear_application,
@@ -527,7 +528,7 @@ async def get_car_plate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if context.user_data.get("_delivery_uncertain"):
         await update.message.reply_text(
             "⚠️ Oldingi yuborish natijasi noma’lum. Takroriy ariza yubormaslik uchun "
-            "operator bilan bog‘laning. Ma’lumotlaringiz saqlandi."
+            f"{PHONE_DISPLAY} yoki {SUPPORT_HANDLE} orqali bog‘laning. Ma’lumotlaringiz saqlandi."
         )
         return CAR_PLATE
     plate = normalize_plate(update.message.text)
@@ -566,7 +567,7 @@ async def get_car_plate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             context.user_data["_delivery_uncertain"] = True
             await update.message.reply_text(
                 "⚠️ Aloqa uzildi; ariza yetib borgani tasdiqlanmadi. "
-                "Ma’lumotlar saqlandi. Qayta ariza yuborishdan oldin operator bilan bog‘laning."
+                f"Ma’lumotlar saqlandi. Qayta ariza yuborishdan oldin {PHONE_DISPLAY} yoki {SUPPORT_HANDLE} orqali bog‘laning."
             )
             return CAR_PLATE
         await update.message.reply_text(
@@ -581,7 +582,7 @@ async def get_car_plate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         f"Ariza kodi: <code>{h(context.user_data['_application_code'])}</code>\n"
         "Hujjatlaringiz operatorga yuborildi. Natija yoki qo‘shimcha ma’lumot "
         "kerak bo‘lsa, shu bot orqali xabar beramiz.\n\n"
-        "Aloqa: park operatori",
+        f"Aloqa: {PHONE_DISPLAY} · {SUPPORT_HANDLE}",
         parse_mode="HTML", reply_markup=_regional_keyboard(context),
     )
     clear_application(context)

@@ -68,7 +68,7 @@ class OperatorActionTests(unittest.IsolatedAsyncioTestCase):
             await operator.on_operator_button(query,ctx)
             self.assertEqual(len(bot.sent),1)
             self.assertEqual(bot.sent[0]['chat_id'],9)
-            self.assertIn('park operatori',bot.sent[0]['text'])
+            self.assertIn('+998 95 522 60 60',bot.sent[0]['text'])
             self.assertIn('WB SALOM',bot.sent[0]['text'])
             self.assertEqual(len(bot.deletes),4)
             self.assertNotIn(key,ctx.bot_data['applications'])

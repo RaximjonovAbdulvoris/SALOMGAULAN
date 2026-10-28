@@ -6,12 +6,13 @@ from telegram.error import BadRequest
 from telegram.ext import CallbackQueryHandler, ContextTypes
 
 from bot.config import ARCHIVE_GROUP, CHALA_RASM_GROUP, OTHER_PARK_GROUP
+from bot.contact_info import PHONE_DISPLAY, SUPPORT_HANDLE
 
 logger = logging.getLogger(__name__)
 READY_TEXT = (
     "✅ SALOM TAXiga arizangiz muvaffaqiyatli qabul qilindi!\n\n"
     "📞 Tez orada operatorlarimiz siz bilan bog'lanishadi.\n\n"
-    "💬 Savollar uchun park operatoriga murojaat qiling."
+    f"💬 Savollar uchun {PHONE_DISPLAY} yoki {SUPPORT_HANDLE} orqali murojaat qiling."
 )
 
 

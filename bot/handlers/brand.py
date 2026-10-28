@@ -32,6 +32,7 @@ from bot.regions import (
 )
 from bot.vehicle_numbers import normalize_plate
 from bot.presentation import contact_button, menu_button
+from bot.contact_info import PHONE_DISPLAY, SUPPORT_HANDLE
 
 logger = logging.getLogger(__name__)
 
@@ -236,7 +237,7 @@ async def brand_get_color(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def brand_get_plate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if context.user_data.get('_delivery_uncertain'):
-        await update.message.reply_text('Oldingi ariza yetib borgani tasdiqlanmadi. Operator bilan bog‘laning yoki /cancel bosing.')
+        await update.message.reply_text(f'Oldingi ariza yetib borgani tasdiqlanmadi. {PHONE_DISPLAY} yoki {SUPPORT_HANDLE} orqali bog‘laning yoxud /cancel bosing.')
         return BRAND_PLATE
     plate = normalize_plate(update.message.text)
     if not plate:
@@ -297,7 +298,7 @@ async def brand_get_plate(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             context.user_data['_delivery_uncertain'] = True
         await update.message.reply_text(
             "⚠️ Ariza yuborilgani tasdiqlanmadi. Ma’lumotlar saqlandi. "
-            "Aloqa uzilgan bo‘lsa, qayta yuborishdan oldin operator bilan bog‘laning.",
+            f"Aloqa uzilgan bo‘lsa, qayta yuborishdan oldin {PHONE_DISPLAY} yoki {SUPPORT_HANDLE} orqali bog‘laning.",
             reply_markup=_regional_keyboard(context),
         )
         return BRAND_PLATE

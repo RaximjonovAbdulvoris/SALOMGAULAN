@@ -1,5 +1,6 @@
 from telegram import ReplyKeyboardMarkup, Update
 from bot.presentation import menu_button
+from bot.contact_info import PHONE_DISPLAY, SUPPORT_HANDLE, PAYOUT_HANDLE
 from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filters
 
 MENU_DRIVER = "📝 Ulanish uchun Ariza"
@@ -28,9 +29,9 @@ WELCOME_TEXT = (
 )
 
 PAYOUT_TEXT = (
-    "💰 *PUL YECHISH BOTI:* (tez orada qo‘shiladi)\n\n"
-    "📞 *PARK NOMERI:* (tez orada qo‘shiladi)\n\n"
-    "✉️ *TELEGRAM ORQALI MUROJAT:* (tez orada qo‘shiladi)"
+    f"💰 *Pul yechish boti:* {PAYOUT_HANDLE}\n\n"
+    f"📞 *Telefon:* {PHONE_DISPLAY}\n"
+    f"✉️ *Telegram aloqa:* {SUPPORT_HANDLE}"
 )
 
 

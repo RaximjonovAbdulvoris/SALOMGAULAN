@@ -9,6 +9,7 @@ import logging
 from html import escape as h
 
 from telegram import InputMediaPhoto, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from bot.contact_info import PHONE_DISPLAY, SUPPORT_HANDLE
 from telegram.error import BadRequest, Forbidden, RetryAfter, TimedOut, NetworkError
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -43,7 +44,7 @@ _ARCHIVES_IN_FLIGHT: set[tuple[int, int]] = set()
 READY_TEXT = (
     "✅ <b>Arizangiz bo‘yicha ish yakunlandi</b>\n\n"
     "Murojaatingiz operator tomonidan ko‘rib chiqildi va yakunlandi.\n"
-    "Savollar uchun: park operatori."
+    f"Savollar uchun: {PHONE_DISPLAY} · {SUPPORT_HANDLE}."
 )
 
 
@@ -54,7 +55,7 @@ INCOMPLETE_TEXT = (
     "Iltimos, bot menyusidagi «📝 Ulanish uchun Ariza» bo‘limi orqali arizani "
     "qaytadan to‘ldirib, barcha so‘ralgan hujjat va avtomobil rasmlarini "
     "to‘liq, tiniq va chetlari kesilmagan holda yuboring.\n\n"
-    "Savollaringiz bo‘lsa, biz bilan bog‘laning: park operatori."
+    f"Savollaringiz bo‘lsa, biz bilan bog‘laning: {PHONE_DISPLAY} · {SUPPORT_HANDLE}."
 )
 OTHER_PARK_TEXT = (
     "🚕 <b>Arizangiz bo‘yicha ma’lumot</b>\n\n"
@@ -64,7 +65,7 @@ OTHER_PARK_TEXT = (
     "Iltimos, ro‘yxatdan o‘tgan taksoparkingiz bilan bog‘lanib, "
     "WB SALOM taksoparkiga o‘tish masalasini hal qiling. "
     "Shundan so‘ng biz bilan bog‘lanishingiz mumkin.\n\n"
-    "Yordam uchun: park operatori."
+    f"Yordam uchun: {PHONE_DISPLAY} · {SUPPORT_HANDLE}."
 )
 
 
